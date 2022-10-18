@@ -1,0 +1,17 @@
+{
+  "type": "component",
+  "metadata": {},
+  "schema": {
+    "name": "leaflet_map_v2",
+    "friendlyName": "leaflet_map_v2",
+    "description": "A component which has the ability to add multiple layers, different icons, and more",
+    "icon": "Text",
+    "settings": [
+      {
+        "type": "text",
+        "key": "text",
+        "label": "Text"
+      }
+    ]
+  }
+}
