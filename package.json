@@ -11,7 +11,10 @@
   },
   "dependencies": {
     "@crownframework/svelte-error-boundary": "^1.0.3",
-    "svelte": "^3.49.0"
+    "svelte": "^3.49.0",
+    "sanitize-html":"2.7.2",
+    "leaflet":"1.9.2",
+    "screenfull": "6.0.2"
   },
   "devDependencies": {
     "@budibase/backend-core": "^2.0.13",
