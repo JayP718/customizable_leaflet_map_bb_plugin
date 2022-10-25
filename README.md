@@ -15,19 +15,17 @@ A component which has the ability to add multiple layers, different icons, and m
 **Tile URLs**
 ![alt text](https://github.com/JayP718/Customizable_Leaflet_Map/blob/main/assets/layer_url.png)
 
-##Advanced Customization
+## Advanced Customization
 
 For advanced customization the following highlighted fields need to be set.
 ![alt text](https://github.com/JayP718/Customizable_Leaflet_Map/blob/main/assets/advanced_customization.png)
 
 There are three different icon customizations. 
-
-
 ![alt text](https://github.com/JayP718/Customizable_Leaflet_Map/blob/main/assets/marker_icon_type.png)
 
 The "Key Field" is the field which will be used to determine what icon/color/ or url to use when the row's data corresponds with the key value. You can define the key value pairs by clicking define options.
 
-####Icon
+#### Icon
 The icon customization type uses [Remix Icon](https://remixicon.com). You can find the correct icon name by looking at this [link](https://remixicon.com) or utilizing Budibase's icon picker.
 ![alt text](https://github.com/JayP718/Customizable_Leaflet_Map/blob/main/assets/default_icon.png).
 Be sure to spell the name correctly with the "ri" prefix.
@@ -35,13 +33,13 @@ Be sure to spell the name correctly with the "ri" prefix.
 Here's an example of it working.
 ![alt text](https://github.com/JayP718/Customizable_Leaflet_Map/blob/main/assets/marker_icon_edit_type.png).
 
-####Color
+#### Color
 The color customization type uses standard RGB HTML Codes. Be sure to prefix it with a "#". You may also use Budibase's spectrum colors as well var(--spectrum-global-color-static-green-400) in this format. The color advanced customization will use the default marker set 
 
 Here's an example of it working.
 ![alt text](https://github.com/JayP718/Customizable_Leaflet_Map/blob/main/assets/marker_icon_color_edit.png).
 
-####URL
+#### URL
 The url customization type uses standard urls but be aware some URLs might cause issues due to CORS. Instead it's preferred to (host the images within budibase itself)[https://docs.budibase.com/docs/image]. You can also use base 64 images if that's easier for you!
 
 Here's an example of it working.
