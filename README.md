@@ -21,6 +21,8 @@ For advanced customization the following highlighted fields need to be set.
 ![alt text](https://github.com/JayP718/Customizable_Leaflet_Map/blob/main/assets/advanced_customization.png)
 
 There are three different icon customizations. 
+
+
 ![alt text](https://github.com/JayP718/Customizable_Leaflet_Map/blob/main/assets/marker_icon_type.png)
 
 The "Key Field" is the field which will be used to determine what icon/color/ or url to use when the row's data corresponds with the key value. You can define the key value pairs by clicking define options.
