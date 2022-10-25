@@ -4,7 +4,7 @@ This is a readme for your new Budibase plugin.
 # Description
 A component which has the ability to add multiple layers, different icons, and more. Whether you just want to edit the default marker and color or do more advanced customization based on your data! It also allows you to have multiple Leaflet Layers!
 
-##Basic Customization
+## Basic Customization
 
 **Icon**
 ![alt text](https://github.com/JayP718/Customizable_Leaflet_Map/blob/main/assets/default_icon.png)
@@ -34,6 +34,7 @@ Here's an example of it working.
 ![alt text](https://github.com/JayP718/Customizable_Leaflet_Map/blob/main/assets/marker_icon_edit_type.png).
 
 #### Color
+<br/>
 The color customization type uses standard RGB HTML Codes. Be sure to prefix it with a "#". You may also use Budibase's spectrum colors as well var(--spectrum-global-color-static-green-400) in this format. The color advanced customization will use the default marker set 
 
 Here's an example of it working.
