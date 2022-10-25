@@ -1,5 +1,5 @@
 {
-  "name": "leaflet_map_v2",
+  "name": "customizable_leaflet_map",
   "version": "1.0.0",
   "description": "A component which has the ability to add multiple layers, different icons, and more",
   "license": "MIT",
