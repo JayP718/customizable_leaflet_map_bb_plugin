@@ -46,7 +46,8 @@ The url customization type uses standard urls but be aware some URLs might cause
 Here's an example of it working.
 ![alt text](https://github.com/JayP718/Customizable_Leaflet_Map/blob/main/assets/marker_url_icon_edit.png).
 
-
+#Known Issues
+- The control layer functionality does not fully working with builder. It will work when the application is published.
 
 
 

@@ -343,7 +343,6 @@
       return;
     }
     mapMasterMarkerGroup.clearLayers()
-    mapMarkerGroup.clearLayers()
     if (!initialMarkerZoomCompleted && customIconOptions) {
       addLayerGroup(customIconOptions);
     }
