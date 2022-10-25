@@ -1,9 +1,12 @@
 <script>
   import { onMount, getContext } from "svelte";
+  import "leaflet/dist/leaflet.css";
+
   import sanitizeHtml from "sanitize-html";
   import {
     FullScreenControl,
     LocationControl,
+    ShowLayerControl,
     initMapControls,
   } from "./EmbeddedMapControls.js";
   import L from "leaflet";
@@ -19,6 +22,7 @@
   export let titleKey = null;
   export let fullScreenEnabled = true;
   export let locationEnabled = true;
+  export let showLayerControlEnabled = false;
   export let defaultLocation;
   export let tileURL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
   export let mapAttribution;
@@ -31,12 +35,12 @@
   export let customKeyField;
   export let customizationBoolean;
   export let iconType;
+  export let tileMultipleURL;
 
   const { styleable, notificationStore } = getContext("sdk");
   const component = getContext("component");
   const embeddedMapId = uuid();
 
-  $: customIconOptions = customIconOptions ? customIconOptions : "bleh";
   function uuid() {
     return "cxxxxxxxxxxxx4xxxyxxxxxxxxxxxxxxx".replace(/[xy]/g, (c) => {
       const r = (Math.random() * 16) | 0;
@@ -74,9 +78,15 @@
   const fullScreenControl = new FullScreenControl({
     position: "topright",
   });
+
+  const showLayerControl = new ShowLayerControl(null, null, {
+    position: "topleft",
+  });
+
   const zoomControl = L.control.zoom({
     position: "bottomright",
   });
+
 
   // Map and marker configuration
   $: defaultMarkerOptions = {
@@ -99,9 +109,6 @@
     alt: "Location Marker",
   };
 
-  const candidateMarkerOptions = {
-    mapMarkerOptions,
-  };
   const mapOptions = {
     fullScreen: false,
     zoomControl: false,
@@ -113,6 +120,10 @@
 
   let mapInstance;
   let mapMarkerGroup = new L.FeatureGroup();
+  let mapMasterMarkerGroup = new L.FeatureGroup();
+
+  let mapTileLayers = new L.layerGroup();
+
   let candidateMarkerGroup = new L.FeatureGroup();
   let candidateMarkerPosition;
   let mounted = false;
@@ -120,6 +131,7 @@
   let minZoomLevel = 0;
   let maxZoomLevel = 18;
   let cachedDeviceCoordinates;
+  let layerGroups = {};
 
   $: validRows = getValidRows(dataProvider?.rows, latitudeKey, longitudeKey);
   $: safeZoomLevel = parseZoomLevel(zoomLevel);
@@ -128,6 +140,7 @@
   $: zoomControlUpdated(mapInstance, zoomEnabled);
   $: locationControlUpdated(mapInstance, locationEnabled);
   $: fullScreenControlUpdated(mapInstance, fullScreenEnabled);
+  $: showLayerControlUpdated(mapInstance, showLayerControlEnabled);
   $: width = $component.styles.normal.width;
   $: height = $component.styles.normal.height;
   $: width, height, mapInstance?.invalidateSize();
@@ -139,9 +152,56 @@
     longitudeKey,
     titleKey,
     onClickMarker,
+    colorIcon,
     defaultMarkerOptions,
-    colorIcon
+    customizationBoolean,
+    customKeyField,
+    iconType,
+    customIconOptions
   );
+
+  $: addMultipleTileLayers(mapInstance, tileMultipleURL);
+  $: updateLayerGroup(showLayerControlEnabled);
+
+  const updateLayerGroup = (showLayerControlEnabled) => {
+    addLayerGroup(customIconOptions)
+  }
+
+
+  const addMultipleTileLayers = (mapInstance, tileMultipleURL) => {
+    mapTileLayers.clearLayers();
+    if (!mapInstance) {
+      return;
+    }
+    if (!tileMultipleURL) {
+      return;
+    }
+    for (let i = 0; i < tileMultipleURL.length; i++) {
+      mapTileLayers.addLayer(L.tileLayer(tileMultipleURL[i].value));
+    }
+  };
+
+
+
+  const addLayerGroup = (customIconOptions) => {
+    if (!mapInstance) {
+      return;
+    }
+    if(!showLayerControl){
+      return;
+    }
+
+    for (let i = 0; i < customIconOptions.length; i++) {
+      layerGroups[customIconOptions[i].label] = new L.FeatureGroup();
+      layerGroups[customIconOptions[i].label].addTo(mapInstance);
+      showLayerControl._addOverlay(
+        layerGroups[customIconOptions[i].label],
+        customIconOptions[i].label
+      );
+      mapMasterMarkerGroup.addLayer(layerGroups[customIconOptions[i].label]);
+    }
+    showLayerControl._addOverlay(mapMarkerGroup, "Other");
+  };
 
   const isValidLatitude = (value) => {
     return !isNaN(value) && value > -90 && value < 90;
@@ -193,12 +253,19 @@
     if (!mapInstance) {
       return;
     }
-    if (mapMarkerGroup.getLayers().length) {
+    if (mapMasterMarkerGroup.getLayers().length) { //if custom markers
+      mapInstance.setZoom(0);
+      mapInstance.fitBounds(mapMasterMarkerGroup.getBounds(), {
+        paddingTopLeft: [0, 24],
+      });
+    } 
+    else if (mapMarkerGroup.getLayers().length){ //if default markers
       mapInstance.setZoom(0);
       mapInstance.fitBounds(mapMarkerGroup.getBounds(), {
         paddingTopLeft: [0, 24],
       });
-    } else {
+    }
+    else {
       mapInstance.setView(defaultCoordinates, safeZoomLevel);
     }
   };
@@ -211,6 +278,17 @@
       locationControl.addTo(mapInstance);
     } else {
       mapInstance.removeControl(locationControl);
+    }
+  };
+
+  const showLayerControlUpdated = (mapInstance, showLayerControlEnabled) => {
+    if (typeof mapInstance !== "object") {
+      return;
+    }
+    if (showLayerControlEnabled) {
+      showLayerControl.addTo(mapInstance);
+    } else {
+      mapInstance.removeControl(showLayerControl);
     }
   };
 
@@ -238,16 +316,11 @@
     }
   };
 
-
-const isValidColor = (strColor) => {
-  const s = new Option().style;
-  s.color = strColor;
-  return s.color !== '';
-}
-
-
-
-
+  const isValidColor = (strColor) => {
+    const s = new Option().style;
+    s.color = strColor;
+    return s.color !== "";
+  };
 
   const addMapMarkers = (
     mapInstance,
@@ -256,73 +329,91 @@ const isValidColor = (strColor) => {
     lngKey,
     titleKey,
     onClick,
+    colorIcon,
     defaultMarkerOptions,
-    colorIcon
+    customizationBoolean,
+    customKeyField,
+    iconType,
+    customIconOptions
   ) => {
     if (!mapInstance) {
       return;
     }
-    mapMarkerGroup.clearLayers();
     if (!validRows?.length) {
       return;
     }
+    mapMasterMarkerGroup.clearLayers()
+    if (!initialMarkerZoomCompleted && customIconOptions) {
+      addLayerGroup(customIconOptions);
+    }
+
+    let currentMapMarkerGroup;
+    mapMarkerGroup.clearLayers();
+
     validRows.forEach((row) => {
-      var customMapMarkerOptions = Object.assign({}, mapMarkerOptions);
+      currentMapMarkerGroup = mapMarkerGroup;
+
       let markerCoords = [row[latKey], row[lngKey]];
-      if (customizationBoolean) {
+      let key_field = row[customKeyField] ?? false;
+
+      if (customizationBoolean && iconType && key_field && customIconOptions) {
         let lookup_element =
-          customIconOptions.find(
-            (element) => element.label == row[customKeyField]
-          ) ?? false;
-        if (iconType ? true : false && lookup_element) {
-          if (iconType == "faCustIcon") {
-            customMapMarkerOptions.icon.options.html =
-              '<div><i class="' +
-              lookup_element.value + ' ' + markerIcon +
-              ' ri-2x" draggable="false" style="color:' +
-              colorIcon +
-              '"></i></div>';
-          } else if (iconType == "colorCustIcon") {
-            let validColor = isValidColor(lookup_element.value)?lookup_element.value:colorIcon
-            customMapMarkerOptions.icon.options.html =
-              '<div><i class="' +
-              markerIcon +
-              ' ri-2x" draggable="false" style="color:' +
-              validColor +
-              '"></i></div>';
-          } else if (iconType == "urlCustIcon") {
-            customMapMarkerOptions.icon = L.icon({
-              iconUrl: lookup_element.value,
-              className: "embedded-map-marker",
-              iconSize: [26, 26],
-              iconAnchor: [13, 26],
-              popupAnchor: [0, -13],
-            });
-          } else {
-            customMapMarkerOptions = Object.assign({}, mapMarkerOptions);
-          }
+          customIconOptions.find((element) => element.label == key_field) ??
+          false;
+        currentMapMarkerGroup = layerGroups[key_field] ?? mapMarkerGroup;
+        if (!lookup_element) {
+        } else if (iconType == "faCustIcon") {
+          mapMarkerOptions.icon.options.html =
+            '<div><i class="' +
+            lookup_element.value +
+            " " +
+            markerIcon +
+            ' ri-2x" draggable="false" style="color:' +
+            colorIcon +
+            '"></i></div>';
+        } else if (iconType == "colorCustIcon") {
+          let validColor = isValidColor(lookup_element.value)
+            ? lookup_element.value
+            : colorIcon;
+          mapMarkerOptions.icon.options.html =
+            '<div><i class="' +
+            markerIcon +
+            ' ri-2x" draggable="false" style="color:' +
+            validColor +
+            '"></i></div>';
+        } else if (iconType == "urlCustIcon") {
+          mapMarkerOptions.icon = L.icon({
+            iconUrl:
+              lookup_element.value ??
+              "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAGKADAAQAAAABAAAAGAAAAADiNXWtAAAA7UlEQVRIDd1U2w2DMAyMmIM/5kBCYojuxiD8MwZL9Aepv/ROSiRw68RJk58inUjgfGc7D+f+/jmdm4EF2IHDg2N+m4sbgOAB2IAzAXKGLCMEjMAzIXw1Jnc0mYDIzHPEgxFj0pWAZGlLEJXvLVoFxLmgMih3flv4Tjg+xLxkqmsge24/LeMV/3oPjjXermaFIO5zLbAPgd5E4x2Bx7ds0fVf/TEya94iHn+tdOv3RS0d4tW36YcZTNodNLrBoO1V4U0mGL0Aa9/JnRhrfhDA9bCYkHO7HmqalIuHLCKV/C4eMakn/sWkvrgwyVrQN4qL5fShlLVMAAAAAElFTkSuQmCC",
+            className: "embedded-map-marker",
+            iconSize: [26, 26],
+            iconAnchor: [13, 26],
+            popupAnchor: [0, -13],
+          });
         } else {
-          customMapMarkerOptions = Object.assign({}, mapMarkerOptions);
         }
       } else {
-        customMapMarkerOptions = Object.assign({}, mapMarkerOptions);
       }
 
-      let marker = L.marker(markerCoords, customMapMarkerOptions).addTo(
-        mapInstance
-      );
+      let marker = L.marker(markerCoords, mapMarkerOptions).addTo(mapInstance);
+      mapMarkerOptions = {
+        icon: L.divIcon(defaultMarkerOptions),
+        className: "embedded-map-marker",
+        draggable: false,
+        alt: "Location Marker",
+      };
       let markerContent = generateMarkerPopupContent(
         row[latKey],
         row[lngKey],
         row[titleKey]
       );
-
       marker
         .bindTooltip(markerContent, {
           direction: "top",
           offset: [0, -25],
         })
-        .addTo(mapMarkerGroup);
+        .addTo(currentMapMarkerGroup);
 
       if (onClick) {
         marker.on("click", () => {
@@ -339,7 +430,6 @@ const isValidColor = (strColor) => {
       initialMarkerZoomCompleted = true;
     }
   };
-
   const generateMarkerPopupContent = (latitude, longitude, text) => {
     return text || latitude + "," + longitude;
   };
@@ -362,12 +452,15 @@ const isValidColor = (strColor) => {
         a: ["href", "target"],
       },
     });
-    L.tileLayer(tileURL, {
-      attribution: "&copy; " + cleanAttribution,
-      zoom,
-    }).addTo(mapInstance);
 
-    // Add click handler
+    mapInstance.addLayer(L.tileLayer(tileURL, {
+        attribution: "&copy; " + cleanAttribution,
+        zoom,
+      }))
+
+    mapTileLayers.addTo(mapInstance);
+
+    
     mapInstance.on("click", handleMapClick);
 
     // Reset view
@@ -413,13 +506,14 @@ const isValidColor = (strColor) => {
     mounted = true;
     initMap(tileURL, mapAttribution, safeZoomLevel);
   });
+
+  
 </script>
 
 <div class="embedded-map-wrapper map-default" use:styleable={$component.styles}>
   {#if error}
     <div>{error}</div>
   {/if}
-  <p>{colorIcon} {markerIcon}</p>
 
   <div id={embeddedMapId} class="embedded embedded-map" />
   {#if candidateMarkerPosition}
@@ -441,16 +535,19 @@ const isValidColor = (strColor) => {
     justify-content: center;
     align-items: center;
   }
+
   .embedded-map :global(.leaflet-top),
   .embedded-map :global(.leaflet-bottom) {
     z-index: 998;
   }
+
   .embedded-map :global(.embedded-map-marker) {
     color: #ee3b35;
   }
   .embedded-map :global(.embedded-map-marker--candidate) {
     color: var(--primaryColor);
   }
+
   .embedded-map :global(.embedded-map-control) {
     font-size: 22px;
   }

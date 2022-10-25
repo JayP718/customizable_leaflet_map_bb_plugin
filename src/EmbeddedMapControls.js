@@ -18,7 +18,15 @@ const createButton = function (html, title, className, container, fn) {
   return link
 }
 
-// Full Screen Control
+const createLayerButton = function (html, title, className, container) {
+  let link = L.DomUtil.create("a", className, container)
+  link.innerHTML = html
+  link.href = "#"
+  link.title = title
+  link.setAttribute("role", "button")
+  link.setAttribute("aria-label", title)
+  return link
+}
 
 const FullScreenControl = L.Control.extend({
   options: {
@@ -53,6 +61,38 @@ const FullScreenControl = L.Control.extend({
   _createButton: createButton,
 })
 
+
+const ShowLayerControl = L.Control.Layers.extend({
+  options: {
+    position: 'topleft',
+    icon: '#spectrum-icon-18-ShowOneLayer',
+    showLayerContent:
+      '<span class="embedded-map-control embedded-map-location-icon">' +
+      '<svg width="16px" height="16px" class="spectrum-Icon" focusable="false">' +
+      '<use xlink:href="#spectrum-icon-18-ShowOneLayer" /></svg><span>'
+  },
+  initialize: function (baseLayers, overlays, options) {
+    L.setOptions(this, options);
+    L.Control.Layers.prototype.initialize.call(this, baseLayers, overlays, options);
+  },
+  onAdd: function (map) {
+    var container = L.Control.Layers.prototype.onAdd.call(this, map);
+    container.childNodes[0].classList.add('map-svg-button');
+    container.childNodes[0].innerHTML = '<span class="embedded-map-control embedded-map-location-icon">' +
+    '<svg width="16px" height="16px" class="spectrum-Icon" focusable="false">' +
+    '<use xlink:href="#spectrum-icon-18-ShowOneLayer" /></svg><span>'
+
+    return container;
+  },
+  _addOverlay: function (mapMarkerGroup, MarkerGroupName) {
+    L.Control.Layers.prototype.addOverlay.call(this, mapMarkerGroup, MarkerGroupName)
+  },
+  _createLayerButton:createLayerButton,
+}
+)
+
+
+
 const initFullScreenControl = () => {
   L.Map.mergeOptions({
     fullScreen: false,
@@ -65,6 +105,24 @@ const initFullScreenControl = () => {
     } else {
       this.fullScreenControl = null
     }
+  })
+}
+
+//TODO
+const initShowLayerControl = () => {
+  L.Map.mergeOptions({
+  })
+
+  L.Map.addInitHook(function () {
+
+    if (this.options.showLayerControl) {
+      this.showLayerControl = new ShowLayerControl()
+      this.addControl(this.showLayerControl)
+    } else {
+      this.showLayerControl = null
+    }
+      
+
   })
 }
 
@@ -96,6 +154,8 @@ const LocationControl = L.Control.extend({
 
     return container
   },
+
+
   disable: function () {
     this._disabled = true
     this._updateDisabled()
@@ -181,12 +241,15 @@ const initLocationControl = () => {
 const initMapControls = () => {
   initFullScreenControl()
   initLocationControl()
+  initShowLayerControl()
 }
 
 export {
   initFullScreenControl,
   initLocationControl,
   initMapControls,
+  initShowLayerControl,
   FullScreenControl,
   LocationControl,
+  ShowLayerControl
 }

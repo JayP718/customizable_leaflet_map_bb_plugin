@@ -2,10 +2,10 @@
   "type": "component",
   "metadata": {},
   "schema": {
-    "name": "leaflet_map_v2",
-    "friendlyName": "leaflet_map_v2",
-    "description": "A component which has the ability to add multiple layers, different icons, and more",
-    "icon": "Text",
+    "name": "customizable_leaflet_map",
+    "friendlyName": "customizable_leaflet_map",
+    "description": "A component which has the ability to add multiple layers, different icons as markers, and more",
+    "icon": "MapView",
     "settings": [
       {
         "type": "dataProvider",
@@ -62,22 +62,24 @@
             "key": "lng"
           }
         ]
-      },
+      }
+     
+      ,
       {
         "type": "boolean",
-        "label": "Enable fullscreen",
+        "label": "Enable Full Screen",
         "key": "fullScreenEnabled",
         "defaultValue": true
       },
       {
         "type": "boolean",
-        "label": "Enable location",
+        "label": "Enable Location",
         "key": "locationEnabled",
         "defaultValue": true
       },
       {
         "type": "boolean",
-        "label": "Enable zoom",
+        "label": "Enable Zoom",
         "key": "zoomEnabled",
         "defaultValue": true
       },
@@ -129,11 +131,15 @@
             "type": "select",
             "label": "Type of Marker Icon",
             "key": "iconType",
-            "defaultValue": "svelteIcon",
+            "defaultValue": false,
             "options": [
               {
+                "value": false,
+                "label": ""
+              },
+              {
                 "value": "faCustIcon",
-                "label": "Font Awesome Icon"
+                "label": "Remix Icon"
               },
               {
                 "value": "colorCustIcon",
@@ -158,6 +164,13 @@
             "label": "Define Key Value Pairs",
             "key": "customIconOptions",
             "dependsOn": "customizationBoolean"
+          },
+          {
+            "type": "boolean",
+            "label": "Enable Layer Control",
+            "key": "showLayerControlEnabled",
+            "dependsOn": "customizationBoolean",
+            "defaultValue": false
           }
         ]
       },
@@ -165,16 +178,15 @@
         "section": true,
         "name": "Tile Customization",
         "settings": [
-         
+          {
+            "type": "text",
+            "label": "Base Tile URL",
+            "key": "tileURL"
+          },
           {
             "type": "options",
             "label": "Multiple Tiles",
             "key": "tileMultipleURL"
-          },
-          {
-            "type": "text",
-            "label": "Tile URL",
-            "key": "tileURL"
           }
           ]
         }
