@@ -87,7 +87,6 @@
     position: "bottomright",
   });
 
-
   // Map and marker configuration
   $: defaultMarkerOptions = {
     html:
@@ -164,9 +163,8 @@
   $: updateLayerGroup(showLayerControlEnabled);
 
   const updateLayerGroup = (showLayerControlEnabled) => {
-    addLayerGroup(customIconOptions)
-  }
-
+    addLayerGroup(customIconOptions);
+  };
 
   const addMultipleTileLayers = (mapInstance, tileMultipleURL) => {
     mapTileLayers.clearLayers();
@@ -181,13 +179,11 @@
     }
   };
 
-
-
   const addLayerGroup = (customIconOptions) => {
     if (!mapInstance) {
       return;
     }
-    if(!showLayerControl){
+    if (!showLayerControl) {
       return;
     }
 
@@ -253,19 +249,19 @@
     if (!mapInstance) {
       return;
     }
-    if (mapMasterMarkerGroup.getLayers().length) { //if custom markers
+    if (mapMasterMarkerGroup.getLayers().length) {
+      //if custom markers
       mapInstance.setZoom(0);
       mapInstance.fitBounds(mapMasterMarkerGroup.getBounds(), {
         paddingTopLeft: [0, 24],
       });
-    } 
-    else if (mapMarkerGroup.getLayers().length){ //if default markers
+    } else if (mapMarkerGroup.getLayers().length) {
+      //if default markers
       mapInstance.setZoom(0);
       mapInstance.fitBounds(mapMarkerGroup.getBounds(), {
         paddingTopLeft: [0, 24],
       });
-    }
-    else {
+    } else {
       mapInstance.setView(defaultCoordinates, safeZoomLevel);
     }
   };
@@ -342,7 +338,7 @@
     if (!validRows?.length) {
       return;
     }
-    mapMasterMarkerGroup.clearLayers()
+    mapMasterMarkerGroup.clearLayers();
     if (!initialMarkerZoomCompleted && customIconOptions) {
       addLayerGroup(customIconOptions);
     }
@@ -371,7 +367,11 @@
             ' ri-2x" draggable="false" style="color:' +
             colorIcon +
             '"></i></div>';
-        } else if (iconType == "colorCustIcon") {
+        }
+        else if (iconType == "divIcon") {
+          mapMarkerOptions.icon = L.divIcon({html:lookup_element.value, className: 'dummy'})
+        }
+        else if (iconType == "colorCustIcon") {
           let validColor = isValidColor(lookup_element.value)
             ? lookup_element.value
             : colorIcon;
@@ -390,8 +390,12 @@
             iconSize: [26, 26],
             iconAnchor: [13, 26],
             popupAnchor: [0, -13],
-          });
-        } else {
+          }
+          
+          );
+        } 
+        
+        else {
         }
       } else {
       }
@@ -453,14 +457,15 @@
       },
     });
 
-    mapInstance.addLayer(L.tileLayer(tileURL, {
+    mapInstance.addLayer(
+      L.tileLayer(tileURL, {
         attribution: "&copy; " + cleanAttribution,
         zoom,
-      }))
+      })
+    );
 
     mapTileLayers.addTo(mapInstance);
 
-    
     mapInstance.on("click", handleMapClick);
 
     // Reset view
@@ -506,8 +511,6 @@
     mounted = true;
     initMap(tileURL, mapAttribution, safeZoomLevel);
   });
-
-  
 </script>
 
 <div class="embedded-map-wrapper map-default" use:styleable={$component.styles}>

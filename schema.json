@@ -148,6 +148,10 @@
               {
                 "value": "urlCustIcon",
                 "label": "URL"
+              },
+              {
+                "value": "divIcon",
+                "label": "DivIcon"
               }
             ],
             "dependsOn": "customizationBoolean"
