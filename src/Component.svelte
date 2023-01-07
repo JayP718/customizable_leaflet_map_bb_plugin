@@ -12,6 +12,7 @@
   import L from "leaflet";
 
   initMapControls();
+  let test;
 
   export let dataProvider;
   export let error;
